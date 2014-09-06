@@ -48,3 +48,13 @@ ufo/test/unit/.coverage
 xlators/mount/fuse/utils/mount.glusterfs
 xlators/mount/fuse/utils/mount_glusterfs
 xlators/features/glupy/src/setup.py
+geo-replication/src/peer_add_secret_pub
+geo-replication/src/peer_gsec_create
+geo-replication/src/gsyncd
+cli/src/gluster
+contrib/fuse-util/fusermount-glusterfs
+geo-replication/src/gsyncd
+.vimrc
+*.include
+tags
+
