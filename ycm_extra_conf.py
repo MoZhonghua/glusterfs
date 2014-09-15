@@ -114,7 +114,7 @@ flags = [
         '-I', './xlators/storage/bd/src',
         '-I', './xlators/storage/posix/src',
         '-I', './xlators/system/posix-acl/src',
-		'-I', '/usr/local/include/glusterfs',
+		'-I', '/usr/include/glusterfs',
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
