@@ -57,9 +57,9 @@ geo-replication/src/gsyncd
 .vimrc
 *.include
 tags
-<<<<<<< HEAD
-
-=======
 *.pyc
 __init__.py
->>>>>>> ignore *.pyc, __init__.py files
+cscope.out
+cscope.in.out
+cscope.po.out
+
