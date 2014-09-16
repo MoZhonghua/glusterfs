@@ -6,15 +6,18 @@ import ycm_core
 # compilation database set (by default, one is not set).
 # CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
 flags = [
-        '-Wall',
-        '-Wextra',
-        '-Werror',
+        # '-Wall',
+        # '-Wextra', # very noisy for gfs sources
+        # '-Werror',
         # '-Wc++98-compat',
         '-Wno-long-long',
         '-Wno-variadic-macros',
 		'-Wno-unused-parameter',
+		'-Wno-missing-field-initializers',
 		'-Wno-sign-compare',
+		'-Wno-type-limits',
         '-fexceptions',
+		'-DDATADIR=\"/var/lib/glusterfs\"',
         # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
         # language to use when compiling headers. So it will guess. Badly. So C++
         # headers will be compiled as C headers. You don't want that so ALWAYS specify
