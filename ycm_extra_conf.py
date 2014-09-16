@@ -12,6 +12,8 @@ flags = [
         # '-Wc++98-compat',
         '-Wno-long-long',
         '-Wno-variadic-macros',
+		'-Wno-unused-parameter',
+		'-Wno-sign-compare',
         '-fexceptions',
         # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
         # language to use when compiling headers. So it will guess. Badly. So C++
@@ -19,7 +21,7 @@ flags = [
         # a "-std=<something>".
         # For a C project, you would set this to something like 'c99' instead of
         # 'c++11'.
-        '-std=c99',
+        '-std=gnu99',
         # ...and the same thing goes for the magic -x option which specifies the
         # language that the files to be compiled are written in. This is mostly
         # relevant for c++ headers.
