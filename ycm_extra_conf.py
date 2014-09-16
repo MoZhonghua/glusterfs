@@ -115,6 +115,8 @@ flags = [
         '-I', './xlators/storage/posix/src',
         '-I', './xlators/system/posix-acl/src',
 		'-I', '/usr/include/glusterfs',
+		'-I', '/include/glusterfs',
+		'-include', 'sys/time.h',
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
