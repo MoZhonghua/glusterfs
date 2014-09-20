@@ -14,7 +14,7 @@ wincmd w
 " move cursor from NERDTree to file
 autocmd VimEnter * wincmd w 
 
-set gdbprg=gdb\ --args\ ./api/examples/glfsxmp\ testvol\ brick-s0
+set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/api/examples/glfsxmp\ testvol\ brick-s0
 set path+=/usr/include/glusterfs,/include/glusterfs
 let g:ctrlp_match_window = 'top'
 
