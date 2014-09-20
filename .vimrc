@@ -1,9 +1,8 @@
-
 let g:ycm_global_ycm_extra_conf = "./ycm_extra_conf.py"
 
 let NERDTreeIgnore=['\.o$', '\.ko$', '\.symvers$', '\.order$', '\.mod.c$', '\.swp$', '\.bak$', '\~$', '\.la', '\.am', '\.in', '\.lo', '\.o']
 
-let NERDTreeSortOrder=['\/$', 'Makefile', 'makefile', '\.c$', '\.cc$', '\.cpp$', '\.h$', '*', '\~$']
+let NERDTreeSortOrder=['\/$', 'Makefile', 'makefile', '*', '\~$']
 let NERDTreeMinimalUI=1
 let NERDTreeQuitOnOpen=0
 let NERDTreeWinPos = 'right'
@@ -19,3 +18,5 @@ set gdbprg=gdb\ --args\ ./api/examples/glfsxmp\ testvol\ brick-s0
 set path+=/usr/include/glusterfs,/include/glusterfs
 let g:ctrlp_match_window = 'top'
 
+" autocmd VimEnter * edit ./api/examples/glfsxmp.c
+" autocmd VimEnter * split
