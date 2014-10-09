@@ -334,7 +334,7 @@ void api_read_files(struct api_read_data* td)
 		creat_time = now - start;
 
 		ret = glfs_read(fd, data, td->file_size, 0);
-		if (ret == 0 || ret != td->file_size) {
+		if (ret != td->file_size) {
 			fprintf(stderr, "failed to read file: %s\n", strerror(errno));
 			++failure;
 			continue;
@@ -410,7 +410,7 @@ void mnt_read_files(struct api_read_data* td)
 		creat_time = now - start;
 
 		ret = read_all_data(data, td->file_size, fd);
-		if (ret == 0 || ret != td->file_size) {
+		if (ret != td->file_size) {
 			fprintf(stderr, "failed to read file: %s\n", strerror(errno));
 			++failure;
 			continue;
