@@ -1,4 +1,4 @@
-#! awk -f
+#! /bin/awk -f
 
 BEGIN {
 	count = 0

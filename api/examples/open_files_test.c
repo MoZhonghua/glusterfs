@@ -10,6 +10,11 @@
 #include "api/glfs.h"
 #include "api/glfs-handles.h"
 
+enum {
+	GLFS_API = 0,
+	MOUNT,
+};
+
 int64_t now_us() {
 	const int64_t kMicrosecondsPerSecond = 1000 * 1000;
 	int64_t us = 0;
@@ -127,14 +132,16 @@ void test_stat_file(glfs_t* fs, const char* path) {
 }
 
 
-struct write_test_data {
+struct api_write_data {
+	int type;
+	const char* path;
 	glfs_t* fs;
 	size_t file_size;
 	int file_count;
 	int worker_no;
 };
 
-void test_write_file(struct write_test_data* d) 
+void api_write_files(struct api_write_data* d) 
 {
 	int i = 0;
 	int ret = 0;
@@ -197,13 +204,97 @@ void test_write_file(struct write_test_data* d)
 	printf("%d %ld ms\n", success, total_time/1000l);
 }
 
+int write_all_data(const void* buf, int size, FILE* fp) {
+	int remain = size;
+	int ret = 0;
+	while (1) {
+		ret = fwrite(buf, 1, remain, fp);
+		if (ret < 0)
+			return ret;
+		remain -= ret;
+		if (remain == 0)
+			return size;
+	}
+}
+
+void mnt_write_files(struct api_write_data* d) 
+{
+	int i = 0;
+	int ret = 0;
+	char file_name[128];
+	char* data;
+	int64_t start = 0;
+	int64_t now = 0;
+	int64_t creat_time = 0;
+	int64_t write_time = 0;
+	int64_t close_time = 0;
+	int64_t one_file_total_time = 0;
+	int64_t total_time = 0;
+	int success = 0;
+	int failure = 0;
+	FILE* fd;
+
+	file_name[0] = '.';
+	data = (char*)malloc(d->file_size);
+	read_urandom(data, d->file_size);
+	for (; i < d->file_count; ++i) {
+		generate_rand_file_name(file_name+1);
+		start = now_us();
+		fd = fopen(file_name, "wb");
+		if (fd == NULL) {
+			fprintf(stderr, "failed to create file: %s\n", strerror(errno));
+			++failure;
+			continue;
+		}
+		now = now_us();
+		creat_time = now - start;
+
+		if (d->file_size > 0) {
+			ret = write_all_data(data, d->file_size, fd);
+			if (ret == 0 || ret != d->file_size) {
+				fprintf(stderr, "failed to write file: %s\n", strerror(errno));
+				++failure;
+				continue;
+			}
+		}
+		write_time = now_us() - now;
+		now = now_us();
+
+		ret = fclose(fd);
+		if (ret == -1) {
+			fprintf(stderr, "failed to close file: %s\n", strerror(errno));
+			++failure;
+			continue;
+		}
+		close_time = now_us() - now;
+		now = now_us();
+		one_file_total_time = now - start;
+		total_time += one_file_total_time;
+		printf("%02d %s %ld %ld %ld %ld\n", 
+				d->worker_no,
+				file_name+1, 
+				creat_time, write_time, 
+				close_time,
+				one_file_total_time);
+		++success;
+	}
+	printf("%d %ld ms\n", success, total_time/1000l);
+}
+
 void* write_thread_worker(void* param) {
-	struct write_test_data* d = param;
-	test_write_file(d);
+	struct api_write_data* d = param;
+	if (d->type == GLFS_API) {
+		api_write_files(d);
+	} else {
+		chdir(d->path);
+		mnt_write_files(d);
+	}
 	return 0;
 }
 
-struct read_test_data {
+struct api_read_data {
+	int type;
+	const char* path;
 	glfs_t *fs;
 	const name_t* files;
 	int file_count;
@@ -211,7 +302,7 @@ struct read_test_data {
 	int worker_no;
 };
 
-void test_read_file(struct read_test_data* td)
+void api_read_files(struct api_read_data* td)
 {
 	int i = 0;
 	int ret = 0;
@@ -272,13 +363,96 @@ void test_read_file(struct read_test_data* td)
 	printf("%d %ld ms\n", success, total_time/1000l);
 }
 
+int read_all_data(void *buf, int size, FILE *fp) {
+	int ret = 0;
+	int remain = size;
+	while (1) {
+		ret = fread(buf, 1, remain, fp);
+		if (ret < 0)
+			return ret;
+		remain -= ret;
+		buf += ret;
+		if (remain == 0)
+			return size;
+	}
+}
+
+void mnt_read_files(struct api_read_data* td)
+{
+	int i = 0;
+	int ret = 0;
+	const char* file_name;
+	char* data;
+	int64_t start = 0;
+	int64_t now = 0;
+	int64_t creat_time = 0;
+	int64_t read_time = 0;
+	int64_t close_time = 0;
+	int64_t one_file_total_time = 0;
+	int64_t total_time = 0;
+	int success = 0;
+	int failure = 0;
+	FILE* fd = NULL;
+
+	data = (char*)malloc(td->file_size);
+	for (; i < td->file_count; ++i) {
+		file_name = td->files[i].name+1; // skip first backslash
+		start = now_us();
+		//printf("begin to read: %s\n", file_name);
+		
+		fd = fopen(file_name, "rb");
+		if (fd == NULL) {
+			fprintf(stderr, "failed to create open: %s\n", strerror(errno));
+			++failure;
+			continue;
+		}
+		now = now_us();
+		creat_time = now - start;
+
+		ret = read_all_data(data, td->file_size, fd);
+		if (ret == 0 || ret != td->file_size) {
+			fprintf(stderr, "failed to read file: %s\n", strerror(errno));
+			++failure;
+			continue;
+		}
+		read_time = now_us() - now;
+		now = now_us();
+
+		ret = fclose(fd);
+		if (ret == -1) {
+			fprintf(stderr, "failed to close file: %s\n", strerror(errno));
+			++failure;
+			continue;
+		}
+		close_time = now_us() - now;
+		now = now_us();
+		one_file_total_time = now - start;
+		total_time += one_file_total_time;
+		printf("%02d %s %ld %ld %ld %ld\n", 
+				td->worker_no,
+				td->files[i].name, 
+				creat_time, read_time, 
+				close_time,
+				one_file_total_time);
+		++success;
+	}
+	printf("%d %ld ms\n", success, total_time/1000l);
+}
+
+
 void* read_thread_worker(void* param) {
-	struct read_test_data* d = param;
-	test_read_file(d);
+	struct api_read_data* d = param;
+	if (d->type == GLFS_API) {
+		api_read_files(d);
+	} else {
+		chdir(d->path);
+		mnt_read_files(d);
+	}
 	return 0;
 }
 
 struct test_config {
+	int type;
 	int is_write;
 	int worker_count;
 	int file_size; 
@@ -286,13 +460,14 @@ struct test_config {
 	const char* file_list;
 	const char* server;
 	const char* volume;
+	const char* path;
 	int verbose;
 };
 
 int parse_config(int argc, char**argv, struct test_config* cfg) {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "rw:s:n:f:v")) != -1) {
+	while ((c = getopt(argc, argv, "rw:s:n:f:xv")) != -1) {
 		//printf("opt: %d, optind: %d, optarg: %s\n", c, optind, optarg);
 		switch (c) {
 			case 'r':
@@ -315,6 +490,9 @@ int parse_config(int argc, char**argv, struct test_config* cfg) {
 				cfg->file_list = optarg;
 				//printf("-f found\n");
 				break;
+			case 'x':
+				cfg->type = MOUNT;
+				break;
 			case 'v':
 				cfg->verbose = 1;
 				break;
@@ -324,18 +502,9 @@ int parse_config(int argc, char**argv, struct test_config* cfg) {
 		}
 	}
 
-	if (optind > argc-2) {
-		fprintf(stderr, "you must specify server and volume\n");
-		return -1;
-	}
-
-	cfg->server = argv[optind++];
-	cfg->volume = argv[optind];
-
 	if (cfg->file_size < 0 
-	    || cfg->file_count <= 0 
-		|| cfg->worker_count <= 0) 
-	{
+			|| cfg->file_count <= 0 
+			|| cfg->worker_count <= 0) {
 		fprintf(stderr, "invalid file_size/file_count/worker_count\n");
 		return -1;
 	}
@@ -345,9 +514,27 @@ int parse_config(int argc, char**argv, struct test_config* cfg) {
 		return -1;
 	}
 
-	if (strlen(cfg->server) == 0 || strlen(cfg->volume) == 0) {
-		fprintf(stderr, "empty server or volume\n");
-		return -1;
+	if (cfg->type == GLFS_API) {
+		if (optind > argc-2) {
+			fprintf(stderr, "you must specify server and volume\n");
+			return -1;
+		}
+		cfg->server = argv[optind++];
+		cfg->volume = argv[optind];
+		if (strlen(cfg->server) == 0 || strlen(cfg->volume) == 0) {
+			fprintf(stderr, "empty server or volume\n");
+			return -1;
+		}
+	} else {
+		if (optind > argc-1) {
+			fprintf(stderr, "you must specify mount point\n");
+			return -1;
+		}
+		cfg->path = argv[optind++];
+		if (strlen(cfg->path) == 0) {
+			fprintf(stderr, "empty mount point\n");
+			return -1;
+		}
 	}
 
 	return 0;
@@ -387,10 +574,14 @@ void run_write_test(const struct test_config* cfg) {
 	int i = 0;
 
 	pthread_t *workers = malloc(sizeof(pthread_t)*cfg->worker_count);
-	struct write_test_data *datas = malloc(sizeof(struct write_test_data)*cfg->worker_count);
+	struct api_write_data *datas = malloc(sizeof(struct api_write_data)*cfg->worker_count);
 
-	fs = open_fs(cfg);
+	if (cfg->type == GLFS_API) 
+		fs = open_fs(cfg);
+
 	for (i = 0; i < cfg->worker_count; ++i) {
+		datas[i].type = cfg->type;
+		datas[i].path = cfg->path;
 		datas[i].fs = fs;
 		datas[i].file_size = cfg->file_size;
 		datas[i].file_count = cfg->file_count/cfg->worker_count;
@@ -402,7 +593,8 @@ void run_write_test(const struct test_config* cfg) {
 		pthread_join(workers[i], NULL);
 	}
 
-	glfs_fini(fs);
+	if (cfg->type == GLFS_API) 
+		glfs_fini(fs);
 
 	free(workers);
 	free(datas);
@@ -435,11 +627,15 @@ void run_read_test(const struct test_config* cfg) {
 	each = total / cfg->worker_count;
 
 	pthread_t *workers = malloc(sizeof(pthread_t)*cfg->worker_count);
-	struct read_test_data *datas = malloc(sizeof(struct read_test_data)*cfg->worker_count);
+	struct api_read_data *datas = malloc(sizeof(struct api_read_data)*cfg->worker_count);
 
-	fs = open_fs(cfg);
+	if (cfg->type == GLFS_API)
+		fs = open_fs(cfg);
+
 	for (i = 0; i < cfg->worker_count; ++i) {
+		datas[i].type = cfg->type;
 		datas[i].fs = fs;
+		datas[i].path = cfg->path;
 		datas[i].file_size = cfg->file_size;
 		datas[i].file_count = cfg->file_count/cfg->worker_count;
 		datas[i].files = files + i * each;
@@ -451,7 +647,8 @@ void run_read_test(const struct test_config* cfg) {
 		pthread_join(workers[i], NULL);
 	}
 
-	glfs_fini(fs);
+	if (cfg->type == GLFS_API)
+		glfs_fini(fs);
 
 	free(files);
 	free(workers);
@@ -462,23 +659,37 @@ void print_config(struct test_config *cfg) {
 	char now[12];
 	now_string(now);
 	if (cfg->is_write) {
-		printf("%s WRITE: -w %d -s %d -n %d %s %s\n", now, cfg->worker_count, 
-				cfg->file_size, cfg->file_count, cfg->server, cfg->volume);
+		if (cfg->type == GLFS_API) {
+			printf("%s API_WRITE: -w %d -s %d -n %d %s %s\n", now, cfg->worker_count, 
+					cfg->file_size, cfg->file_count, cfg->server, cfg->volume);
+		} else {
+			printf("%s MNT_WRITE: -w %d -s %d -n %d %s\n", now, cfg->worker_count, 
+					cfg->file_size, cfg->file_count, cfg->path);
+		}
 	} else {
-		printf("%s READ: -w %d -s %d -n %d -f %s %s %s\n", now, cfg->worker_count, 
-				cfg->file_size, cfg->file_count, cfg->file_list, cfg->server, cfg->volume);
+		if (cfg->type == GLFS_API) {
+			printf("%s API_READ: -w %d -s %d -n %d -f %s %s %s\n", now, cfg->worker_count, 
+					cfg->file_size, cfg->file_count, cfg->file_list, cfg->server, cfg->volume);
+		} else {
+			printf("%s MNT_READ: -w %d -s %d -n %d -f %s %s\n", now, cfg->worker_count, 
+					cfg->file_size, cfg->file_count, cfg->file_list, cfg->path);
+		}
 	}
 }
 
 int main(int argc, char**argv) 
 {
+	int64_t start;
+	char now[128];
 	struct test_config cfg;
+	cfg.type = GLFS_API;
 	cfg.is_write = 1;
 	cfg.file_size = 0;
 	cfg.file_count = 0;
 	cfg.file_list = NULL;
 	cfg.server = NULL;
 	cfg.volume = NULL;
+	cfg.path = NULL;
 	cfg.verbose = 0;
 
 	if (parse_config(argc, argv, &cfg) != 0) {
@@ -488,13 +699,17 @@ int main(int argc, char**argv)
 
 	print_config(&cfg);
 
-	// char buf[512];
+
+	start = now_us();
 
 	if (cfg.is_write) {
 		run_write_test(&cfg);
 	} else {
 		run_read_test(&cfg);
 	}
+
+	now_string(now);
+	printf("%s - %ld s \n", now, (now_us() - start)/1000/1000);
 
 	return 0;
 }
