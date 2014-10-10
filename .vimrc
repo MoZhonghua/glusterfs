@@ -7,8 +7,6 @@ let NERDTreeMinimalUI=1
 let NERDTreeQuitOnOpen=0
 let NERDTreeWinPos = 'right'
 let NERDTreeWinSize = 31
-let g:miniBufExplMinSize=1
-" let g:miniBufExplSplitBelow = 1
 autocmd VimEnter * NERDTree
 wincmd w
 " move cursor from NERDTree to file
@@ -22,3 +20,9 @@ set makeprg=make\ -C\ /home/gfs-admin/glusterfs/api/examples/\ open_files_test
 
 " autocmd VimEnter * edit ./api/examples/glfsxmp.c
 " autocmd VimEnter * split
+
+" donot consider -> . as word sepatator, so we can use <cword> to select 
+" a->b, or a.b
+set iskeyword+=45,46,62
+
+
