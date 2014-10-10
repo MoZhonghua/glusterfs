@@ -14,9 +14,11 @@ wincmd w
 " move cursor from NERDTree to file
 autocmd VimEnter * wincmd w 
 
-set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/api/examples/glfsxmp\ testvol\ brick-s0
+set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 10\ x2\ afr2vol
 set path+=/usr/include/glusterfs,/include/glusterfs
 let g:ctrlp_match_window = 'top'
+
+set makeprg=make\ -C\ /home/gfs-admin/glusterfs/api/examples/\ open_files_test
 
 " autocmd VimEnter * edit ./api/examples/glfsxmp.c
 " autocmd VimEnter * split

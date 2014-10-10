@@ -15,6 +15,20 @@ enum {
 	MOUNT,
 };
 
+struct test_config {
+	int type;
+	int is_write;
+	int worker_count;
+	int file_size; 
+	int file_count;
+	const char* file_list;
+	const char* server;
+	const char* volume;
+	const char* path;
+	int verbose;
+	int fsync;
+};
+
 int64_t now_us() {
 	const int64_t kMicrosecondsPerSecond = 1000 * 1000;
 	int64_t us = 0;
@@ -115,6 +129,7 @@ void test_open_nonexisting_file_for_append(glfs_t* fs, const char* filename) {
 		fprintf(stderr, "write - %s: (%p) %s\n", filename, fd, strerror(errno));
 		exit(0);
 	}
+	glfs_fsync(fd);
 	glfs_close(fd);
 }
 
@@ -133,6 +148,7 @@ void test_stat_file(glfs_t* fs, const char* path) {
 
 
 struct api_write_data {
+	const struct test_config *cfg;
 	int type;
 	const char* path;
 	glfs_t* fs;
@@ -182,7 +198,15 @@ void api_write_files(struct api_write_data* d)
 		}
 		write_time = now_us() - now;
 		now = now_us();
-
+	
+		if (d->cfg->fsync) {
+			ret = glfs_fsync(fd);
+			if (ret == -1) {
+				fprintf(stderr, "failed to fsync file: %s\n", strerror(errno));
+				++failure;
+				continue;
+			}
+		}
 		ret = glfs_close(fd);
 		if (ret == -1) {
 			fprintf(stderr, "failed to close file: %s\n", strerror(errno));
@@ -260,12 +284,22 @@ void mnt_write_files(struct api_write_data* d)
 		write_time = now_us() - now;
 		now = now_us();
 
+		if (d->cfg->fsync) {
+			ret = fsync(fileno(fd));
+			if (ret == -1) {
+				fprintf(stderr, "failed to fsync file: %s\n", strerror(errno));
+				++failure;
+				continue;
+			}
+		}
+
 		ret = fclose(fd);
 		if (ret == -1) {
 			fprintf(stderr, "failed to close file: %s\n", strerror(errno));
 			++failure;
 			continue;
 		}
+
 		close_time = now_us() - now;
 		now = now_us();
 		one_file_total_time = now - start;
@@ -293,6 +327,7 @@ void* write_thread_worker(void* param) {
 }
 
 struct api_read_data {
+	const struct test_config *cfg;
 	int type;
 	const char* path;
 	glfs_t *fs;
@@ -451,23 +486,10 @@ void* read_thread_worker(void* param) {
 	return 0;
 }
 
-struct test_config {
-	int type;
-	int is_write;
-	int worker_count;
-	int file_size; 
-	int file_count;
-	const char* file_list;
-	const char* server;
-	const char* volume;
-	const char* path;
-	int verbose;
-};
-
 int parse_config(int argc, char**argv, struct test_config* cfg) {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "rw:s:n:f:xv")) != -1) {
+	while ((c = getopt(argc, argv, "rw:s:n:f:xvy")) != -1) {
 		//printf("opt: %d, optind: %d, optarg: %s\n", c, optind, optarg);
 		switch (c) {
 			case 'r':
@@ -495,6 +517,9 @@ int parse_config(int argc, char**argv, struct test_config* cfg) {
 				break;
 			case 'v':
 				cfg->verbose = 1;
+				break;
+			case 'y':
+				cfg->fsync = 1;
 				break;
 			default:
 				fprintf(stderr, "invalid options: %d - %s\n", c, optarg);
@@ -580,6 +605,7 @@ void run_write_test(const struct test_config* cfg) {
 		fs = open_fs(cfg);
 
 	for (i = 0; i < cfg->worker_count; ++i) {
+		datas[i].cfg = cfg;
 		datas[i].type = cfg->type;
 		datas[i].path = cfg->path;
 		datas[i].fs = fs;
@@ -633,6 +659,7 @@ void run_read_test(const struct test_config* cfg) {
 		fs = open_fs(cfg);
 
 	for (i = 0; i < cfg->worker_count; ++i) {
+		datas[i].cfg = cfg;
 		datas[i].type = cfg->type;
 		datas[i].fs = fs;
 		datas[i].path = cfg->path;
@@ -691,6 +718,7 @@ int main(int argc, char**argv)
 	cfg.volume = NULL;
 	cfg.path = NULL;
 	cfg.verbose = 0;
+	cfg.fsync = 0;
 
 	if (parse_config(argc, argv, &cfg) != 0) {
 		//fprintf(stderr, "usage: test.exe -t 1 -w 5 -s 1024 -n 100000 x2 dht1vol\n");
