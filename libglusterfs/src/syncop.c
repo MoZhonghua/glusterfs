@@ -15,6 +15,45 @@
 
 #include "syncop.h"
 
+void __yawn(struct syncargs* args) {
+    args->task = synctask_get ();                           
+    if (args->task)                                         
+	return;
+    pthread_mutex_init (&args->mutex, NULL);                
+    pthread_cond_init (&args->cond, NULL);                 
+    args->done = 0;                                        
+}
+
+void __wake(struct syncargs* args) {
+    if (args->task) {                                       
+	synctask_wake (args->task);                     
+    } else {                                                
+	pthread_mutex_lock (&args->mutex);              
+	{                                               
+	    args->done = 1;				
+	    pthread_cond_signal (&args->cond);      
+	}                                               
+	pthread_mutex_unlock (&args->mutex);            
+    }                                                       
+}
+
+void __yield(struct syncargs* args) {
+    if (args->task) {				               
+	synctask_yield (args->task);				
+    } else {							
+	pthread_mutex_lock (&args->mutex);			
+	{							
+	    while (!args->done)				
+		pthread_cond_wait (&args->cond,		
+			&args->mutex);	
+	}							
+	pthread_mutex_unlock (&args->mutex);			
+	pthread_mutex_destroy (&args->mutex);			
+	pthread_cond_destroy (&args->cond);			
+    }
+}
+
+
 int
 syncopctx_setfsuid (void *uid)
 {

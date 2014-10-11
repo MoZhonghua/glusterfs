@@ -24,5 +24,6 @@ set makeprg=make\ -C\ /home/gfs-admin/glusterfs/api/examples/\ open_files_test
 " donot consider -> . as word sepatator, so we can use <cword> to select 
 " a->b, or a.b
 set iskeyword+=45,46,62
+set tabstop=8
 
 

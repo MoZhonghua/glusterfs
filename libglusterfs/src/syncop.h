@@ -166,46 +166,9 @@ struct syncopctx {
         gid_t       *groups;
 };
 
-#define __yawn(args) do {                                       \
-        args->task = synctask_get ();                           \
-        if (args->task)                                         \
-            break;                                              \
-        pthread_mutex_init (&args->mutex, NULL);                \
-        pthread_cond_init (&args->cond, NULL);                  \
-        args->done = 0;                                         \
-        } while (0)
-
-
-#define __wake(args) do {                                       \
-        if (args->task) {                                       \
-                synctask_wake (args->task);                     \
-        } else {                                                \
-                pthread_mutex_lock (&args->mutex);              \
-                {                                               \
-                        args->done = 1;				\
-                        pthread_cond_signal (&args->cond);      \
-                }                                               \
-                pthread_mutex_unlock (&args->mutex);            \
-        }                                                       \
-        } while (0)
-
-
-#define __yield(args) do {						\
-	if (args->task) {				                \
-		synctask_yield (args->task);				\
-	} else {							\
-		pthread_mutex_lock (&args->mutex);			\
-		{							\
-			while (!args->done)				\
-				pthread_cond_wait (&args->cond,		\
-						   &args->mutex);	\
-		}							\
-		pthread_mutex_unlock (&args->mutex);			\
-		pthread_mutex_destroy (&args->mutex);			\
-		pthread_cond_destroy (&args->cond);			\
-	}								\
-	} while (0)
-
+void __yawn(struct syncargs* args);
+void __wake(struct syncargs* args);
+void __yield(struct syncargs* args);
 
 #define SYNCOP(subvol, stb, cbk, op, params ...) do {                   \
                 struct  synctask        *task = NULL;                   \
