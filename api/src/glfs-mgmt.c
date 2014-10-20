@@ -39,6 +39,7 @@
 
 #include "glfs-internal.h"
 #include "glfs-mem-types.h"
+#include "graph-utils.h"
 
 int glfs_volfile_fetch (struct glfs *fs);
 int32_t glfs_get_volume_info_rpc (call_frame_t *frame, xlator_t *this,
@@ -484,6 +485,7 @@ mgmt_getspec_cbk (struct rpc_req *req, struct iovec *iov, int count,
 	FILE			*tmpfp = NULL;
 	int                      need_retry = 0;
 	struct glfs		*fs = NULL;
+	char                    *graph_buf = NULL;
 
 	frame = myframe;
 	ctx = frame->this->ctx;
@@ -593,6 +595,9 @@ out:
 
 	if (tmpfp)
 		fclose (tmpfp);
+
+	graph_buf = glusterfs_graph_print_buf(ctx->active);
+	gf_log("glfs-mgmt", GF_LOG_DEBUG, "%s", graph_buf);
 
 	return 0;
 }

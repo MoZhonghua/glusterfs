@@ -1,6 +1,6 @@
 let g:ycm_global_ycm_extra_conf = "./ycm_extra_conf.py"
 
-let NERDTreeIgnore=['\.o$', '\.ko$', '\.symvers$', '\.order$', '\.mod.c$', '\.swp$', '\.bak$', '\~$', '\.la', '\.am', '\.in', '\.lo', '\.o']
+let NERDTreeIgnore=['\.o$', '\.ko$', '\.symvers$', '\.order$', '\.mod.c$', '\.swp$', '\.bak$', '\~$', '\.la', '\.in', '\.lo', '\.o']
 
 let NERDTreeSortOrder=['\/$', 'Makefile', 'makefile', '*', '\~$']
 let NERDTreeMinimalUI=1
@@ -12,7 +12,10 @@ wincmd w
 " move cursor from NERDTree to file
 autocmd VimEnter * wincmd w 
 
-set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 10\ x2\ afr2vol
+" set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/glusterfsd/src/glusterfs\ -s\ x2\ --volfile-id\ gluster/nfs
+set gdbprg=gdb\ --args\ /usr/local/sbin/glusterd
+set gdbprg=gdb\ --args\ /usr/local/sbin/gluster\ volume\ info
+set gdbprg=gdb\ --args\ /home/gfs-admin/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 1\ \-v\ x2\ afrvol
 set path+=/usr/include/glusterfs,/include/glusterfs
 let g:ctrlp_match_window = 'top'
 
