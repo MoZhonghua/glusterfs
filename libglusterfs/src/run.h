@@ -11,6 +11,9 @@
 #ifndef __RUN_H__
 #define __RUN_H__
 
+#include <stdio.h>
+#include <unistd.h>
+
 #define RUN_PIPE -1
 
 struct runner {
