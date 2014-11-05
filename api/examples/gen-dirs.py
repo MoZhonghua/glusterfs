@@ -3,15 +3,19 @@
 import os;
 import sys;
 
+def ensure_dir(f):
+	if not os.path.exists(f):
+		os.mkdir(f)
+
 def create_dirs(path):
 	os.chdir(path)
 	for i in range(0, 256):
 		p = "%02x" % (i)
-		os.mkdir(p)
+		ensure_dir(p)
 		os.chdir(p)
 		for j in range(0, 256):
 			c = "%02x" % (j)
-			os.mkdir(c)
+			ensure_dir(c)
 			print "%s/%s" % (p, c)
 		os.chdir("..")
 
