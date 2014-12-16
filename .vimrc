@@ -11,16 +11,16 @@ wincmd w
 " move cursor from NERDTree to file
 autocmd VimEnter * wincmd w 
 
-" set gdbprg=gdb\ --args\ /root/glusterfs/glusterfsd/src/glusterfs\ -s\ x2\ --volfile-id\ gluster/nfs
+" set gdbprg=gdb\ --args\ /root/work/glusterfs/glusterfsd/src/glusterfs\ -s\ x2\ --volfile-id\ gluster/nfs
 set gdbprg=gdb\ --args\ /usr/local/sbin/glusterd
 set gdbprg=gdb\ --args\ /usr/local/sbin/gluster\ volume\ info
-set gdbprg=gdb\ --args\ /root/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 1\ \-v\ x2\ afrvol
+set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 1\ \-v\ x2\ afrvol
 set gdbprg=gdb\ --args\ /usr/local/sbin/glusterd\ -N
-set gdbprg=gdb\ --args\ /root/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ 192.168.80.101\ afr1vol
-set gdbprg=gdb\ --args\ /root/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ -r\ -f\ api/examples/test.log\ 192.168.80.101\ afr1vol
+set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ 192.168.80.101\ afr1vol
+set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ -r\ -f\ api/examples/test.log\ 192.168.80.101\ afr1vol
 let g:ctrlp_match_window = 'top'
 
-set makeprg=make\ -C\ /root/glusterfs/api/examples/\ open_files_test
+set makeprg=make\ -C\ /root/work/glusterfs/api/examples/\ open_files_test
 
 " autocmd VimEnter * edit ./api/examples/glfsxmp.c
 " autocmd VimEnter * split
@@ -95,3 +95,6 @@ set path+=glusterfs-hadoop/0.20.2/src
 set path+=glusterfsd/src
 set path+=cli/src
 
+if filereadable(".NERDTreeBookmarks")
+    let g:NERDTreeBookmarksFile = ".NERDTreeBookmarks"
+endif

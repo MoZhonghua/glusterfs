@@ -62,4 +62,5 @@ __init__.py
 cscope.out
 cscope.in.out
 cscope.po.out
+*.cdepn
 

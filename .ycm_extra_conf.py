@@ -122,6 +122,7 @@ flags = [
 		'-I', '/usr/include/glusterfs',
 		'-I', '/include/glusterfs',
 		'-include', 'sys/time.h',
+		'-include', '/usr/include/stdint.h'
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
