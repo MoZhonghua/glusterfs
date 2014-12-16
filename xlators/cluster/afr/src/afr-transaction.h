@@ -11,6 +11,8 @@
 #ifndef __TRANSACTION_H__
 #define __TRANSACTION_H__
 
+#include "afr.h"
+
 typedef enum {
         LOCAL_FIRST = 1,
         LOCAL_LAST = 2
