@@ -18,6 +18,9 @@ set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1
 set gdbprg=gdb\ --args\ /usr/local/sbin/glusterd\ -N
 set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ 192.168.80.101\ afr1vol
 set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ -r\ -f\ api/examples/test.log\ 192.168.80.101\ afr1vol
+
+set gdbprg=gdb\ --args\ /root/work/glusterfs/api/examples/open_files_test\ -w\ 1\ -s\ 4096\ -n\ 2\ \-v\ -r\ -f\ api/examples/test.log\ 192.168.80.200\ afr1vol
+
 let g:ctrlp_match_window = 'top'
 
 set makeprg=make\ -C\ /root/work/glusterfs/api/examples/\ open_files_test
