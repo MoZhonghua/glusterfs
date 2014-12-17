@@ -3,10 +3,6 @@
 # yum install ntp
 # yum install gcc
 
-yum erase glusterfs
-yum erase glusterfs-debuginfo
-yum erase glusterfs-{cli,libs}
-
 yum install openssl-devel
 yum install python-devel
 yum install flex-devel
