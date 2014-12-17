@@ -1,5 +1,5 @@
 
-let NERDTreeIgnore=['\.o$', '\.ko$', '\.symvers$', '\.order$', '\.mod.c$', '\.swp$', '\.bak$', '\~$', '\.la', '\.in', '\.lo', '\.o']
+let NERDTreeIgnore=['\.o$', '\.ko$', '\.symvers$', '\.order$', '\.mod.c$', '\.swp$', '\.bak$', '\~$', '\.la', '\.in', '\.lo', '\.o', '\.cdepn']
 
 let NERDTreeSortOrder=['\/$', 'Makefile', 'makefile', '*', '\~$']
 let NERDTreeMinimalUI=1
