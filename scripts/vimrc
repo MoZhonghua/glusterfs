@@ -30,7 +30,7 @@ set makeprg=make\ -C\ /root/work/glusterfs/api/examples/\ open_files_test
 
 " donot consider -> . as word sepatator, so we can use <cword> to select 
 " a->b, or a.b
-set iskeyword+=45,46,62
+" set iskeyword+=45,46,62
 set tabstop=8
 
 function! NERDTreeCustomIgnoreFilter(path)
