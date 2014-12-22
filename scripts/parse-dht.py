@@ -7,7 +7,8 @@ import socket
 # 0x00000001000000006666666699999998
 
 def parse_dht_xattr(s):
-    if len(s) != len("0x00000001000000006666666699999998"):
+    # len("0x00000001000000006666666699999998"):
+    if len(s) != 34:
 	return (0, 0, 0, 0)
 
     count_str = s[2:9]
@@ -23,6 +24,9 @@ def parse_dht_xattr(s):
 def main():
     r = parse_dht_xattr(sys.argv[1])
     print r
+
+    if r == (0, 0, 0, 0):
+	return
 
     interval = (r[3] - r[2]) 
     print "%d %d\n" % (0xFFFFFFFF / interval, interval)
